@@ -18,16 +18,11 @@ parser.add_argument('-dev_file', metavar="file", help="Output Devices to File", 
 parser.add_argument('-gv_file', metavar="file", help="Output GraphViz Topology File", type=str)
 parser.add_argument('-ng_file', metavar="file", help="Output NetGrph Topology File", type=str)
 parser.add_argument('--quiet', help='Quiet output, log to file only', action="store_true")
-parser.add_argument("--seed_os", metavar='cisco_nxos', help="Netmiko OS type for seed devices",
-                    type=str)
-parser.add_argument("--seed_file", metavar='file', help="Seed devices from a file, one per line",
-                    type=str)
-parser.add_argument("--user", metavar='username', help="Username to execute as",
-                    type=str)
-parser.add_argument("--max_crawl", metavar='int', help="Max devices to crawl (default 10000)",
-                    type=int)
-parser.add_argument("--conf", metavar='file', help="Alternate Config File",
-                    type=str)
+parser.add_argument("--seed_os", metavar='cisco_nxos', help="Netmiko OS type for seed devices", type=str)
+parser.add_argument("--seed_file", metavar='file', help="Seed devices from a file, one per line", type=str)
+parser.add_argument("--user", metavar='username', help="Username to execute as", type=str)
+parser.add_argument("--max_crawl", metavar='int', help="Max devices to crawl (default 10000)", type=int)
+parser.add_argument("--conf", metavar='file', help="Alternate Config File", type=str)
 parser.add_argument("--debug", help="Set debugging level", type=int)
 parser.add_argument("-v", help="Verbose Output", action="store_true")
 parser.add_argument("-en", metavar="secret", help="Activate privilege level 15", type=str)
