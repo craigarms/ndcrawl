@@ -29,6 +29,7 @@ parser.add_argument("--conf", metavar='file', help="Alternate Config File",
                     type=str)
 parser.add_argument("--debug", help="Set debugging level", type=int)
 parser.add_argument("-v", help="Verbose Output", action="store_true")
+parser.add_argument("-en", metavar="secret", help="Activate privilege level 15")
 
 args = parser.parse_args()
 
