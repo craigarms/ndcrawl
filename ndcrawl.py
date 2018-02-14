@@ -14,7 +14,7 @@ CONFIG_FILE = 'ndcrawl.ini'
 parser = argparse.ArgumentParser(description='Discover Network Topology via CDP/LLDP')
 parser.add_argument('-seed', metavar="switch1[,switch2]", help="Seed devices to start crawl")
 parser.add_argument('-nei_file', metavar="file", help="Output Neighbors to File", type=str)
-parser.add_argument('-dev_file', metavar="file", help="Output Neighbors to File", type=str)
+parser.add_argument('-dev_file', metavar="file", help="Output Devices to File", type=str)
 parser.add_argument('-ng_file', metavar="file", help="Output NetGrph Topology File", type=str)
 parser.add_argument('--quiet', help='Quiet output, log to file only', action="store_true")
 parser.add_argument("--seed_os", metavar='cisco_nxos', help="Netmiko OS type for seed devices",
