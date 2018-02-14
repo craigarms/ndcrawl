@@ -6,3 +6,4 @@ start-env.sh
 output/
 *.csv
 ndcrawl.ini
+.idea/
