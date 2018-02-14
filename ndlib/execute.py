@@ -6,7 +6,7 @@ from netmiko import ConnectHandler
 
 logger = logging.getLogger(__name__)
 
-def get_session(host, platform, username, password):
+def get_session(host, platform, username, password, secret):
     """ Get an SSH session on device """
 
     net_connect = ConnectHandler(device_type=platform,
@@ -14,9 +14,10 @@ def get_session(host, platform, username, password):
                                  global_delay_factor=0.2,
                                  username=username,
                                  password=password,
+                                 secret=secret,
                                  timeout=20)
-
-    net_connect.enable()
+    if secret:
+        net_connect.enable()
 
     return net_connect
 

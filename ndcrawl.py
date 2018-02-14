@@ -25,7 +25,7 @@ parser.add_argument("--max_crawl", metavar='int', help="Max devices to crawl (de
 parser.add_argument("--conf", metavar='file', help="Alternate Config File", type=str)
 parser.add_argument("--debug", help="Set debugging level", type=int)
 parser.add_argument("-v", help="Verbose Output", action="store_true")
-parser.add_argument("-en", metavar="secret", help="Activate privilege level 15", type=str)
+parser.add_argument("--en", metavar='secret', help="Activate privilege level 15", type=str)
 
 args = parser.parse_args()
 
@@ -89,6 +89,10 @@ if args.seed or args.seed_file:
     else:
         password = getpass.getpass('Password for ' + args.user + ': ')
 
+    if not args.en:
+        if 'secret' in config['main'] and config['main']['secret']:
+            args.en = config['main']['secret']
+
     # Check for output files from config
     if not args.nei_file:
         if 'nei_file' in config['main'] and config['main']['nei_file']:
@@ -96,6 +100,9 @@ if args.seed or args.seed_file:
     if not args.dev_file:
         if 'dev_file' in config['main'] and config['main']['dev_file']:
             args.dev_file = config['main']['dev_file']
+    if not args.gv_file:
+        if 'gv_file' in config['main'] and config['main']['gv_file']:
+            args.dev_file = config['main']['gv_file']
 
     if args.seed_file:
         seeds = list()
@@ -110,7 +117,7 @@ if args.seed or args.seed_file:
     if not args.quiet:
         print('Beginning crawl on:', ', '.join(seeds))
 
-    topology.crawl(seeds, args.user, password, outf=args.nei_file, dout=args.dev_file, ngout=args.ng_file)
+    topology.crawl(seeds, args.user, password, args.nei_file, args.dev_file, args.ng_file, args.en)
 else:
     print('\nError: Must provide -seed devices if not using config file\n')
     parser.print_help()

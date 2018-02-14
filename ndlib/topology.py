@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 config = dict()
 
-def crawl(seeds, username, password, outf=None, dout=None, ngout=None):
+def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=None):
     'Crawl CDP/LLDP Neighbors to build a topology'
 
     # Queue for devices to scrape next
@@ -98,7 +98,7 @@ def crawl(seeds, username, password, outf=None, dout=None, ngout=None):
                 # Start thread to scrape devices
                 nd_thread = threading.Thread(target=gather_nd, \
                     kwargs={"device": devices[current], "username": username, \
-                            "password": password, "out_q": out_q, \
+                            "password": password, "secret": secret, "out_q": out_q, \
                             "qtrack": qtrack})
                 nd_thread.start()
 
@@ -197,7 +197,7 @@ def gather_nd(**kwargs):
 
     # Try to connect to device id first
     try:
-        nd = scrape_device(device, dname, kwargs['username'], kwargs['password'])
+        nd = scrape_device(device, dname, kwargs['username'], kwargs['password'], kwargs['secret'])
 
     except Exception as e:
         if device['ipv4'] == 'Unknown':
@@ -207,19 +207,19 @@ def gather_nd(**kwargs):
         else:
             logger.info('Failed to connect to %s, trying %s', dname, device['ipv4'])
             try:
-                nd = scrape_device(device, device['ipv4'], kwargs['username'], kwargs['password'])
+                nd = scrape_device(device, device['ipv4'], kwargs['username'], kwargs['password'], kwargs['secret'])
             except Exception as e:
                 logger.warning('Failed to scrape %s: %s', dname, str(e))
     if nd:
         out_q.put(nd)
         logger.info('Completed Scraping %s: %s', dname, tid)
 
-def scrape_device(device, host, username, password):
+def scrape_device(device, host, username, password, secret):
     """ Scrape a device and return the results as list of neighbors """
 
     dname = device['remote_device_id']
 
-    ses = execute.get_session(host, device['os'], username, password)
+    ses = execute.get_session(host, device['os'], username, password, secret)
 
     cdp = execute.send_command(ses, 'show cdp neighbor detail', dname)
 
