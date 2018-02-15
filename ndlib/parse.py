@@ -6,7 +6,8 @@ logger = logging.getLogger(__name__)
 
 config = dict()
 
-def merge_nd(nd_cdp, nd_lldp):
+
+def merge_nd(nd_cdp, nd_lldp, serial=None):
     """ Merge CDP and LLDP data into one structure """
 
     neis = dict()
@@ -21,12 +22,15 @@ def merge_nd(nd_cdp, nd_lldp):
         if (n['local_device_id'], n['remote_device_id'], n['local_int'], n['remote_int']) in n:
             if 'description' in neis[(n['local_device_id'], n['remote_device_id'], n['local_int'], n['remote_int'])]:
                 n['description'] = neis[(n['local_device_id'], n['remote_device_id'], n['local_int'], n['remote_int'])]['description']
+        if serial:
+            n['serial'] = serial
         neis[(n['local_device_id'], n['remote_device_id'], n['local_int'], n['remote_int'])] = n
 
     for n in neis:
         nd.append(neis[n])
 
     return nd
+
 
 def parse_cdp(cdp, device):
     'Return nd neighbors for IOS/NXOS CDP output'
@@ -66,7 +70,6 @@ def parse_cdp(cdp, device):
             current['image'] = 'Unknown'
 
         if ints:
-            #print(l, ints.group(1), ints.group(2))
             current['local_int'] = ints.group(1)
             current['remote_int'] = ints.group(2)
         if ipv4:
@@ -179,3 +182,13 @@ def parse_lldp(lldp_det, lldp_sum, device):
         else:
             logger.warning('Regex Ignore on %s neighbor from %s', current['remote_device_id'], current['local_device_id'])
     return nd
+
+def parse_serial(serial_data, device=None):
+    'Return the serial number regex`d from the input'
+    if serial_data and serial_data[0]:
+        serial = re.search(r'^Processor board ID (.+)$', serial_data[0])
+        rtrn = serial.group(1)
+    else:
+        rtrn = None
+
+    return rtrn

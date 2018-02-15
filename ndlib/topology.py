@@ -1,6 +1,5 @@
 'Topology Routines'
 import logging
-import csv
 import threading
 from time import sleep
 from queue import Queue
@@ -14,8 +13,11 @@ logger = logging.getLogger(__name__)
 
 config = dict()
 
+
 def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=None):
     'Crawl CDP/LLDP Neighbors to build a topology'
+
+    # TODO CHECK FILES FOR WRITING BEFORE STARTING
 
     # Queue for devices to scrape next
     q = Queue()
@@ -53,6 +55,9 @@ def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=No
         devices[s]['ipv4'] = s
         devices[s]['os'] = config['main']['seed_os']
         devices[s]['platform'] = 'Unknown'
+        devices[s]['version'] = 'Unknown'
+        devices[s]['image'] = 'Unknown'
+        devices[s]['serial'] = 'Unknown'
         devices[s]['logged_in'] = True
         distances[s] = 0
 
@@ -96,9 +101,9 @@ def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=No
                 logger.info('Processing %s', current)
 
                 # Start thread to scrape devices
-                nd_thread = threading.Thread(target=gather_nd, \
-                    kwargs={"device": devices[current], "username": username, \
-                            "password": password, "secret": secret, "out_q": out_q, \
+                nd_thread = threading.Thread(target=gather_nd,
+                    kwargs={"device": devices[current], "username": username,
+                            "password": password, "secret": secret, "out_q": out_q,
                             "qtrack": qtrack})
                 nd_thread.start()
 
@@ -131,8 +136,7 @@ def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=No
                 if n['remote_device_id'] in distances:
                     if distances[n['local_device_id']] > (distances[n['remote_device_id']] + 1):
                         distances[n['local_device_id']] = distances[n['remote_device_id']] + 1
-                        logger.info('Found new distances on %s: %s', n['local_device_id'], \
-                                    str(distances[n['remote_device_id']] + 1))
+                        logger.info('Found new distances on %s: %s', n['local_device_id'], str(distances[n['remote_device_id']] + 1))
 
             # Save all neighbor data
             for n in nd:
@@ -179,11 +183,15 @@ def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=No
     logger.info('Total neighbors: %s', str(ncount))
 
 
-    output.output_files(outf, ngout, dout, neighbors, devices, distances)
+    # Output information to files
+    try:
+        output.output_files(outf, ngout, dout, neighbors, devices, distances)
+    except FileNotFoundError as e:
+        logger.warning('Unable to open file %s for writing, No such file or directory')
 
 
 def gather_nd(**kwargs):
-    'Gather neighbors from device'
+    """Gather neighbors from device"""
 
     out_q = kwargs['out_q']
     device = kwargs['device']
@@ -214,6 +222,7 @@ def gather_nd(**kwargs):
         out_q.put(nd)
         logger.info('Completed Scraping %s: %s', dname, tid)
 
+
 def scrape_device(device, host, username, password, secret):
     """ Scrape a device and return the results as list of neighbors """
 
@@ -226,6 +235,10 @@ def scrape_device(device, host, username, password, secret):
     lldp = execute.send_command(ses, 'show lldp neighbor detail', dname)
     lldp_sum = execute.send_command(ses, 'show lldp neighbor', dname)
 
+    sh_serial = execute.send_command(ses, 'show version | i Processor board', dname)
+
+    ses.disconnect()
+
     if device['os'] == 'cisco_nxos':
         nd_cdp = parse.parse_cdp(cdp, device)
         nd_lldp = parse.parse_lldp(lldp, lldp_sum, device)
@@ -237,9 +250,7 @@ def scrape_device(device, host, username, password, secret):
 
     for n in nd_cdp:
         logger.debug('Found Neighbor %s on %s', n, dname)
-    ses.disconnect()
 
-    nd = parse.merge_nd(nd_cdp, nd_lldp)
+    nd = parse.merge_nd(nd_cdp, nd_lldp, parse.parse_serial(sh_serial))
 
     return nd
-
