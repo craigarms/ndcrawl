@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 config = dict()
 
 
-def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=None):
+def crawl(seeds, username, password, outf=None, dout=None, ngout=None, gvout=None, secret=None):
     'Crawl CDP/LLDP Neighbors to build a topology'
 
     # TODO CHECK FILES FOR WRITING BEFORE STARTING
@@ -195,7 +195,7 @@ def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=No
 
     # Output information to files
     try:
-        output.output_files(outf, ngout, dout, neighbors, devices, distances)
+        output.output_files(outf, ngout, dout, gvout, neighbors, devices, distances)
     except FileNotFoundError as e:
         logger.warning('Unable to open file %s for writing, No such file or directory')
 

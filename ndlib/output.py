@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def output_files(outf, ngout, dout, neighbors, devices, distances):
+def output_files(outf, ngout, dout, gvout, neighbors, devices, distances):
     """ Output files to CSV if requested """
 
     # Output Neighbor CSV File
@@ -61,3 +61,21 @@ def output_files(outf, ngout, dout, neighbors, devices, distances):
                   'version' : devices[d]['version'], 'image': devices[d]['image'],
                   'logged_in': logged_in}
             dw.writerow(dd)
+
+    if gvout:
+        #TODO Remove duplicate lines
+        #TODO Add interface names to lines
+        #TODO Add information to devices
+        dot_graph = "graph G { \n"
+        for d in sorted(devices):
+            dot_graph = dot_graph + devices[d]['remote_device_id'].split('.')[0] + "\n"
+
+        for n in neighbors:
+            if n['local_device_id'] == "Unknown" or n['local_device_id'] == "Seed":
+                continue
+            dot_graph = dot_graph + n['local_device_id'].split('.')[0] + " -- " + n['remote_device_id'].split('.')[0] + "\n"
+
+        dot_graph = dot_graph + "\n }"
+        f = open(gvout, 'w')
+        f.write(dot_graph)
+        f.close()
