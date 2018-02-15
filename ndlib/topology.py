@@ -6,6 +6,7 @@ from queue import Queue
 from . import execute
 from . import parse
 from . import output
+import pprint
 #from progressbar import ProgressBar
 from tqdm import tqdm
 
@@ -51,13 +52,18 @@ def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=No
     for s in seeds:
         q.put(s)
         devices[s] = dict()
-        devices[s]['remote_device_id'] = s
+        devices[s]['local_device_id'] = 'Unknown'
+        devices[s]['remote_device_id'] = 'Unknown'
+        devices[s]['platform'] = 'Unknown'
+        devices[s]['local_int'] = 'Unknown'
+        devices[s]['remote_int'] = 'Unknown'
         devices[s]['ipv4'] = s
         devices[s]['os'] = config['main']['seed_os']
-        devices[s]['platform'] = 'Unknown'
+        devices[s]['description'] = 'Unknown'
         devices[s]['version'] = 'Unknown'
         devices[s]['image'] = 'Unknown'
         devices[s]['serial'] = 'Unknown'
+        devices[s]['distance'] = 'Unknown'
         devices[s]['logged_in'] = True
         distances[s] = 0
 
@@ -156,11 +162,13 @@ def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=No
                     devices[rname]['logged_in'] = logged_in
 
                 # Save logged_in as False initially, update on another pass
-                if 'logged_in' not in devices[n['local_device_id']]:
-                    devices[n['local_device_id']]['logged_in'] = False
-
-                # Local device always was logged in to
-                devices[n['local_device_id']]['logged_in'] = True
+                if n['local_device_id'] != "Unknown" and n['local_device_id'] != "Seed":
+                    if 'logged_in' not in devices[n['local_device_id']]:
+                        devices[n['local_device_id']]['logged_in'] = False
+                #
+                # # Local device always was logged in to
+                if n['local_device_id'] != "Unknown" and n['local_device_id'] != "Seed":
+                    devices[n['local_device_id']]['logged_in'] = True
                 logger.info('Processing Out_q entry %s on %s', rname, n['local_device_id'])
 
                 # New Neighbor that has not been scraped, only scrape IOS/NXOS for now
@@ -182,6 +190,8 @@ def crawl(seeds, username, password, outf=None, dout=None, ngout=None, secret=No
         ncount += 1
     logger.info('Total neighbors: %s', str(ncount))
 
+    # Dedup Device information
+    devices = parse.dedup_devices(devices)
 
     # Output information to files
     try:

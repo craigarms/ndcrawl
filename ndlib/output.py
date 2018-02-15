@@ -2,6 +2,7 @@
 import csv
 import logging
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -18,6 +19,8 @@ def output_files(outf, ngout, dout, neighbors, devices, distances):
         dw.writeheader()
         for n in neighbors:
             # nw = n.copy()
+            if n['local_device_id'] == "Unknown" or n['local_device_id'] == "Seed":
+                continue
 
             nw = {'local_device_id': n['local_device_id'], 'local_int': n['local_int'],
                   'remote_device_id': n['remote_device_id'], 'remote_int': n['remote_int'],

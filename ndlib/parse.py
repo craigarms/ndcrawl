@@ -192,3 +192,19 @@ def parse_serial(serial_data, device=None):
         rtrn = None
 
     return rtrn
+
+
+def dedup_devices(devices):
+    """Depuplicate device list based on IPv4"""
+    devs = dict()
+
+    for d in devices:
+        ip = devices[d]['ipv4']
+        if ip in devs:
+            for sub in devices[d]:
+                if devs[devices[d]['ipv4']][sub] == "Unknown" and devices[d][sub] != "Unknown":
+                    devs[devices[d]['ipv4']][sub] = devices[d][sub]
+        else:
+            devs[devices[d]['ipv4']] = devices[d]
+
+    return devs
