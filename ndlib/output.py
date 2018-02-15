@@ -9,9 +9,9 @@ def output_files(outf, ngout, dout, neighbors, devices, distances):
 
     # Output Neighbor CSV File
     if outf:
-        fieldnames = ['local_device_id', 'remote_device_id', 'distance', 'local_int', \
-                      'remote_int', 'ipv4', 'os', 'platform', 'description']
-        f = open(outf, 'w')
+        fieldnames = ['local_device_id', 'remote_device_id', 'distance', 'local_int',
+                      'remote_int', 'ipv4', 'os', 'platform', 'description','version', 'image']
+        f = open(outf, 'w', newline="\n")
         dw = csv.DictWriter(f, fieldnames=fieldnames)
         dw.writeheader()
         for n in neighbors:
@@ -24,7 +24,7 @@ def output_files(outf, ngout, dout, neighbors, devices, distances):
     # Output NetGrph CSV File
     if ngout:
         fieldnames = ['LocalName', 'LocalPort', 'RemoteName', 'RemotePort']
-        f = open(ngout, 'w')
+        f = open(ngout, 'w', newline="\n")
         dw = csv.DictWriter(f, fieldnames=fieldnames)
         dw.writeheader()
         for n in neighbors:
@@ -38,20 +38,17 @@ def output_files(outf, ngout, dout, neighbors, devices, distances):
         f.close()
 
     if dout:
-        fieldnames = ['device_id', 'ipv4', 'platform', 'os', 'distance', 'logged_in']
-        f = open(dout, 'w')
+        fieldnames = ['device_id', 'ipv4', 'platform', 'os', 'version', 'image', 'logged_in']
+        f = open(dout, 'w', newline="\n")
         dw = csv.DictWriter(f, fieldnames=fieldnames)
         dw.writeheader()
         for d in sorted(devices):
-            dist = 100
-            if devices[d]['remote_device_id'] in distances:
-                dist = distances[devices[d]['remote_device_id']]
-
             logged_in = False
             if 'logged_in' in devices[d] and devices[d]['logged_in']:
                 logged_in = True
 
-            dd = {'device_id': devices[d]['remote_device_id'], 'ipv4': devices[d]['ipv4'], \
-                  'platform': devices[d]['platform'], 'os': devices[d]['os'], \
-                  'distance': dist, 'logged_in': logged_in}
+            dd = {'device_id': devices[d]['remote_device_id'], 'ipv4': devices[d]['ipv4'],
+                  'platform': devices[d]['platform'], 'os': devices[d]['os'],
+                  'version' : devices[d]['version'], 'image': devices[d]['image'],
+                  'logged_in': logged_in}
             dw.writerow(dd)
