@@ -23,7 +23,6 @@ def merge_nd(nd_cdp, nd_lldp):
                 n['description'] = neis[(n['local_device_id'], n['remote_device_id'], n['local_int'], n['remote_int'])]['description']
         neis[(n['local_device_id'], n['remote_device_id'], n['local_int'], n['remote_int'])] = n
 
-
     for n in neis:
         nd.append(neis[n])
 
@@ -43,15 +42,16 @@ def parse_cdp(cdp, device):
         ints = re.search(r'^Interface\:\s([A-Za-z0-9\.\-\_\/]+).*\:\s([A-Za-z0-9\.\-\_\/]+)$', l)
         ipv4 = re.search(r'^\s+IPv4\sAddress\:\s(\d+\.\d+\.\d+\.\d+)', l)
         ip = re.search(r'^\s+IP\saddress\:\s(\d+\.\d+\.\d+\.\d+)', l)
-        nxos = re.search(r'Cisco Nexus', l)
-        ios = re.search(r'Cisco IOS', l)
+        nxos = re.search(r'(Cisco Nexus .+)$', l)
+        ios = re.search(r'(Cisco IOS .+)$', l)
+        version = re.search(r'\, Version ([^\,]+)\,', l)
+
         if devid:
             if current:
                 if not re.search(config['main']['ignore_regex'], current['remote_device_id']):
                     nd.append(current.copy())
                 else:
-                    logger.info('Regex Ignore on %s neighbor from %s', \
-                                    current['remote_device_id'], current['local_device_id'])
+                    logger.info('Regex Ignore on %s neighbor from %s', current['remote_device_id'], current['local_device_id'])
             current = dict()
             rname = devid.group(1)
             current['local_device_id'] = dname
@@ -62,6 +62,9 @@ def parse_cdp(cdp, device):
             current['ipv4'] = 'Unknown'
             current['os'] = 'Unknown'
             current['description'] = ''
+            current['version'] = 'Unknown'
+            current['image'] = 'Unknown'
+
         if ints:
             #print(l, ints.group(1), ints.group(2))
             current['local_int'] = ints.group(1)
@@ -79,13 +82,13 @@ def parse_cdp(cdp, device):
             current['os'] = 'cisco_nxos'
         if ios:
             current['os'] = 'cisco_ios'
+        if version:
+            current['version'] = version.group(1)
 
     if current:
-        if not re.search(config['main']['ignore_regex'], current['remote_device_id']):
-            nd.append(current.copy())
+        if not re.search(config['main']['ignore_regex'], current['remote_device_id']): nd.append(current.copy())
         else:
-            logger.warning('Regex Ignore on %s neighbor from %s', \
-                            current['remote_device_id'], current['local_device_id'])
+            logger.warning('Regex Ignore on %s neighbor from %s', current['remote_device_id'], current['local_device_id'])
     return nd
 
 
@@ -123,8 +126,7 @@ def parse_lldp(lldp_det, lldp_sum, device):
                 if not re.search(config['main']['ignore_regex'], current['remote_device_id']):
                     nd.append(current.copy())
                 else:
-                    logger.info('Regex Ignore on %s neighbor from %s', \
-                                    current['remote_device_id'], current['local_device_id'])
+                    logger.info('Regex Ignore on %s neighbor from %s', current['remote_device_id'], current['local_device_id'])
             current = dict()
             rname = devid.group(1)
             current['local_device_id'] = dname
@@ -135,7 +137,8 @@ def parse_lldp(lldp_det, lldp_sum, device):
             current['ipv4'] = 'Unknown'
             current['os'] = 'Unknown'
             current['description'] = ''
-
+            current['version'] = 'Unknown'
+            current['image'] = 'Unknown'
 
         if sysname:
             if not re.search('advertised', sysname.group(1)):
@@ -146,8 +149,7 @@ def parse_lldp(lldp_det, lldp_sum, device):
             # Try to map interface via summary if Unknown (IOS)
             if device['os'] == 'cisco_ios':
                 if current['remote_int'] in dmap:
-                    logger.debug('Mapping %s local interface %s to chassis id %s', \
-                                dname, dmap[current['remote_int']], current['remote_int'])
+                    logger.debug('Mapping %s local interface %s to chassis id %s', dname, dmap[current['remote_int']], current['remote_int'])
                     current['local_int'] = dmap[current['remote_int']]
                 elif current['remote_device_id'] in dmap:
                     current['local_int'] = dmap[current['remote_device_id']]
@@ -175,6 +177,5 @@ def parse_lldp(lldp_det, lldp_sum, device):
         if not re.search(config['main']['ignore_regex'], current['remote_device_id']):
             nd.append(current.copy())
         else:
-            logger.warning('Regex Ignore on %s neighbor from %s', \
-                            current['remote_device_id'], current['local_device_id'])
+            logger.warning('Regex Ignore on %s neighbor from %s', current['remote_device_id'], current['local_device_id'])
     return nd
