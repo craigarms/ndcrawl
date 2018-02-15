@@ -4,20 +4,26 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def output_files(outf, ngout, dout, neighbors, devices, distances):
     """ Output files to CSV if requested """
 
     # Output Neighbor CSV File
     if outf:
-        fieldnames = ['local_device_id', 'remote_device_id', 'distance', 'local_int',
-                      'remote_int', 'ipv4', 'os', 'platform', 'description','version', 'image']
+        fieldnames = ['local_device_id', 'local_int',
+                      'remote_device_id', 'remote_int',
+                      'remote_ipv4', 'os', 'platform', 'description']
         f = open(outf, 'w', newline="\n")
         dw = csv.DictWriter(f, fieldnames=fieldnames)
         dw.writeheader()
         for n in neighbors:
-            nw = n.copy()
-            if 'logged_in' in nw:
-                nw.pop('logged_in')
+            # nw = n.copy()
+
+            nw = {'local_device_id': n['local_device_id'], 'local_int': n['local_int'],
+                  'remote_device_id': n['remote_device_id'], 'remote_int': n['remote_int'],
+                  'remote_ipv4': n['ipv4'], 'os': n['os'],
+                  'platform': n['platform'], 'description': n['description']}
+
             dw.writerow(nw)
         f.close()
 
